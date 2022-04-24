@@ -1,0 +1,60 @@
+import { Module, ValidationPipe, MiddlewareConsumer } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
+import { ReportsModule } from './reports/reports.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './users/user.entity';
+import { Report } from './reports/report.entity';
+import { APP_PIPE } from '@nestjs/core';
+const cookieSession = require('cookie-session');
+
+@Module({
+  imports: [
+    UsersModule,
+    ReportsModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV}`,
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          type: 'sqlite',
+          database: config.get<string>('DB_NAME'),
+          entities: [User, Report],
+          synchronize: true,
+        };
+      },
+    }),
+  ],
+  controllers: [AppController],
+  providers: [
+    //How to apply global validation
+    // validation hits on every endpoint
+    AppService,
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+      }),
+    },
+  ],
+})
+export class AppModule {
+  // how to apply global cookies
+
+  //will apply on app start up
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(
+        cookieSession({
+          keys: ['cookie-session'],
+        }),
+      )
+      .forRoutes('*');
+  }
+}
