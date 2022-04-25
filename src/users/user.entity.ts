@@ -6,7 +6,9 @@ import {
   Column,
   AfterLoad,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
+import { Report } from '../reports/report.entity';
 
 @Entity()
 export class User {
@@ -38,4 +40,7 @@ export class User {
   logUserFound() {
     console.log('queried user with id:', this.id);
   }
+
+  @OneToMany(() => Report, (report) => report.user)
+  reports: Report[];
 }
