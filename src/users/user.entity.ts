@@ -18,6 +18,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ default: true })
+  isAdmin: boolean;
+
   @PrimaryGeneratedColumn()
   id: number;
 
